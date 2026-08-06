@@ -30,4 +30,9 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function activeCart()
+    {
+        return $this->hasOne(Cart::class)->where('status', 'active');
+    }
 }
