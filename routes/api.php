@@ -38,6 +38,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::post('/orders', [OrderController::class, 'store']);
 
+    //logout
+    Route::post('/logout', [AuthController::class, 'logout']);
+
 });
 
 Route::middleware('auth:sanctum')->get('/test-token', function (Request $request) {
