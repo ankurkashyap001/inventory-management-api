@@ -24,14 +24,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/cart/items/{id}', [CartController::class, 'removeItem']);
     Route::delete('/cart/clear', [CartController::class, 'clear']);
 
-    // Address Endpoints
+    // User Profile
+    Route::get('/user', [UserController::class, 'show']);
+    Route::put('/user/profile', [UserController::class, 'updateProfile']);
+
+    // Address
     Route::get('/addresses', [AddressController::class, 'index']);
     Route::post('/addresses', [AddressController::class, 'store']);
+    Route::delete('/addresses/{id}', [AddressController::class, 'destroy']);
 
-    // Order Endpoints
+    // Orders
     Route::get('/orders', [OrderController::class, 'index']);
-    Route::post('/orders', [OrderController::class, 'store']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::post('/orders', [OrderController::class, 'store']);
 
 });
 

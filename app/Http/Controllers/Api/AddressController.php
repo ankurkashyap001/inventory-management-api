@@ -62,4 +62,38 @@ class AddressController extends Controller
             'data'    => new AddressResource($address),
         ], 201);
     }
+
+    /**
+     * DELETE /api/addresses/{id}
+     * Delete a saved address for the authenticated user.
+     */
+    public function destroy(Request $request, int $id): JsonResponse
+    {
+        $address = $request->user()->addresses()->where('id', $id)->first();
+
+        if (!$address) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Address not found or does not belong to you',
+                'code'    => 1001,
+            ], 404);
+        }
+
+        $wasDefault = $address->is_default;
+        $address->delete();
+
+        // If deleted address was default, set the latest remaining address as default
+        if ($wasDefault) {
+            $nextDefault = $request->user()->addresses()->latest()->first();
+            if ($nextDefault) {
+                $nextDefault->update(['is_default' => true]);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Address deleted successfully',
+            'code'    => 1000,
+        ], 200);
+    }
 }
