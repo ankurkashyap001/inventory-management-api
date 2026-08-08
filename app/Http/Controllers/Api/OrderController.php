@@ -34,6 +34,37 @@ class OrderController extends Controller
     }
 
     /**
+     * GET /api/orders/{id}
+     * Fetch single order details by ID or order_number.
+     */
+    public function show(Request $request, $id): JsonResponse
+    {
+        $order = $request->user()
+            ->orders()
+            ->with(['items.product.primaryImage'])
+            ->where(function ($query) use ($id) {
+                $query->where('id', $id)
+                      ->orWhere('order_number', $id);
+            })
+            ->first();
+
+        if (!$order) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found',
+                'code'    => 1005,
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order details retrieved',
+            'code'    => 1000,
+            'data'    => new OrderResource($order),
+        ], 200);
+    }
+
+    /**
      * POST /api/orders
      * Place an order from active cart.
      */
