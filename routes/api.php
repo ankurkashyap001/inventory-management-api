@@ -9,11 +9,18 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PhoneAuthController;
 
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+// Public Phone Auth Routes
+Route::prefix('auth')->group(function () {
+    Route::post('/send-otp', [PhoneAuthController::class, 'sendOtp']);
+    Route::post('/verify-otp', [PhoneAuthController::class, 'verifyOtp']);
+});
 
 Route::middleware('auth:sanctum')->group(function () {
     
