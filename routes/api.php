@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PhoneAuthController;
+use App\Http\Controllers\Api\WishlistController;
 
 
 Route::get('/user', function (Request $request) {
@@ -44,6 +45,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
     Route::post('/orders', [OrderController::class, 'store']);
+
+    // Wishlist Endpoints
+    Route::get('/wishlist', [WishlistController::class, 'index']);
+    Route::post('/wishlist/toggle', [WishlistController::class, 'toggle']);
+    Route::get('/wishlist/ids', [WishlistController::class, 'getIds']);
 
     //logout
     Route::post('/logout', [AuthController::class, 'logout']);
