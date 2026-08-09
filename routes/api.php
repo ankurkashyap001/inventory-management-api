@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\AddressController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PhoneAuthController;
 use App\Http\Controllers\Api\WishlistController;
+use App\Http\Controllers\Api\CouponController;
 
 
 Route::get('/user', function (Request $request) {
@@ -50,6 +51,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/wishlist', [WishlistController::class, 'index']);
     Route::post('/wishlist/toggle', [WishlistController::class, 'toggle']);
     Route::get('/wishlist/ids', [WishlistController::class, 'getIds']);
+
+    // Coupon Endpoint (Public or Protected)
+    Route::post('/coupons/apply', [CouponController::class, 'apply']);
 
     //logout
     Route::post('/logout', [AuthController::class, 'logout']);
