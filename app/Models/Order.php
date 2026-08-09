@@ -15,15 +15,19 @@ class Order extends Model
         'user_id',
         'order_number',
         'total_amount',
-        'status',
+        'status', // 'placed', 'packing', 'out_for_delivery', 'delivered', 'cancelled'
         'payment_method',
         'payment_status',
         'shipping_address_json',
+        'estimated_delivery_time',
+        'delivery_partner_name',
+        'delivery_partner_phone',
     ];
 
     protected $casts = [
-        'shipping_address_json' => 'array',
-        'total_amount'          => 'decimal:2',
+        'shipping_address_json'   => 'array',
+        'total_amount'            => 'decimal:2',
+        'estimated_delivery_time' => 'datetime',
     ];
 
     public function user(): BelongsTo

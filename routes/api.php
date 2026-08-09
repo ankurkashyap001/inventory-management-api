@@ -42,9 +42,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/addresses', [AddressController::class, 'store']);
     Route::delete('/addresses/{id}', [AddressController::class, 'destroy']);
 
-    // Orders
+    // Orders & Tracking Endpoints
     Route::get('/orders', [OrderController::class, 'index']);
     Route::get('/orders/{id}', [OrderController::class, 'show']);
+    Route::get('/orders/{id}/track', [OrderController::class, 'track']); // Live Tracking
     Route::post('/orders', [OrderController::class, 'store']);
 
     // Wishlist Endpoints
