@@ -12,6 +12,12 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PhoneAuthController;
 use App\Http\Controllers\Api\WishlistController;
 use App\Http\Controllers\Api\CouponController;
+//Admin controller
+use App\Http\Controllers\Api\Admin\AdminCategoryController;
+use App\Http\Controllers\Api\Admin\AdminDashboardController;
+use App\Http\Controllers\Api\Admin\AdminOrderController;
+use App\Http\Controllers\Api\Admin\AdminProductController;
+use App\Http\Controllers\Api\Admin\AdminUserController;
 
 
 Route::get('/user', function (Request $request) {
@@ -58,6 +64,27 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //logout
     Route::post('/logout', [AuthController::class, 'logout']);
+
+});
+
+// Protected Admin API Routes Group
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
+    
+    // Dashboard Stats
+    Route::get('/dashboard-stats', [AdminDashboardController::class, 'stats']);
+
+    // Orders Management
+    Route::get('/orders', [AdminOrderController::class, 'index']);
+    Route::patch('/orders/{id}/status', [AdminOrderController::class, 'updateStatus']);
+
+    // Customer Users List
+    Route::get('/users', [AdminUserController::class, 'index']);
+
+    // Product CRUD
+    Route::apiResource('products', AdminProductController::class);
+
+    // Category CRUD
+    Route::apiResource('categories', AdminCategoryController::class);
 
 });
 

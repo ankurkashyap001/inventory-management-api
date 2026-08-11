@@ -105,6 +105,8 @@ class PhoneAuthController extends Controller
                     'name'  => $user->name,
                     'phone' => $user->phone,
                     'email' => $user->email,
+                    'role' => $user->role,       // 👈 Must be included in API response
+                    'is_admin' => $user->is_admin // 👈 Must be included in API response
                 ],
             ],
         ], 200);
