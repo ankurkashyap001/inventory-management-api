@@ -18,6 +18,7 @@ class Order extends Model
         'status', // 'placed', 'packing', 'out_for_delivery', 'delivered', 'cancelled'
         'payment_method',
         'payment_status',
+        'transaction_id',
         'shipping_address_json',
         'estimated_delivery_time',
         'delivery_partner_name',

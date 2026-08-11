@@ -6,11 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\OrderResource;
 use App\Models\Address;
 use App\Models\Order;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class OrderController extends Controller
 {
@@ -67,26 +67,39 @@ class OrderController extends Controller
 
     /**
      * POST /api/orders
-     * Place an order from active cart.
+     * Place an order supporting COD and Manual/QR UPI Payments.
      */
     public function store(Request $request): JsonResponse
     {
+        // Support both address_id and delivery_address_id from frontend requests
+        $addressId = $request->input('delivery_address_id') ?? $request->input('address_id');
+        $paymentMethod = strtolower($request->input('payment_method', 'cod'));
+
+        $request->merge([
+            'address_id'     => $addressId,
+            'payment_method' => $paymentMethod,
+        ]);
+
         $request->validate([
             'address_id'     => 'required|integer|exists:addresses,id',
-            'payment_method' => 'required|string|in:COD,Online',
+            'payment_method' => 'required|string|in:cod,upi',
+            'transaction_id' => 'required_if:payment_method,upi|nullable|string|max:255',
+        ], [
+            'address_id.required'        => 'Please select a valid delivery address.',
+            'transaction_id.required_if' => 'Transaction reference ID is required for UPI payments.',
         ]);
 
         $user = $request->user();
 
-        // 1. Verify Address Ownership
+        // 1. Verify Shipping Address Ownership
         $address = Address::where('user_id', $user->id)
-            ->where('id', $request->address_id)
+            ->where('id', $addressId)
             ->first();
 
         if (!$address) {
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid shipping address selected',
+                'message' => 'Selected address does not belong to your account',
                 'code'    => 1001,
             ], 422);
         }
@@ -123,18 +136,25 @@ class OrderController extends Controller
             }
         }
 
-        // 4. Execute Transactional Order Creation
+        // 4. Determine Payment Status based on method
+        $paymentStatus = ($paymentMethod === 'upi') ? 'paid' : 'pending';
+
+        // 5. Execute Transactional Order Creation
         try {
-            $order = DB::transaction(function () use ($user, $cart, $address, $request) {
+            $order = DB::transaction(function () use ($user, $cart, $address, $paymentMethod, $paymentStatus, $request) {
                 
                 // Create Order Entry
                 $newOrder = Order::create([
                     'user_id'               => $user->id,
                     'order_number'          => 'ANK-' . strtoupper(Str::random(8)),
                     'total_amount'          => $cart->total_amount,
-                    'status'                => 'pending',
-                    'payment_method'        => $request->payment_method,
-                    'payment_status'        => $request->payment_method === 'Online' ? 'paid' : 'pending',
+                    'status'                => 'placed',
+                    'payment_method'        => $paymentMethod,
+                    'payment_status'        => $paymentStatus,
+                    'transaction_id'        => $request->input('transaction_id'),
+                    'estimated_delivery_time' => Carbon::now()->addMinutes(10),
+                    'delivery_partner_name'   => 'Rahul Sharma',
+                    'delivery_partner_phone'  => '+91 98765 43210',
                     'shipping_address_json' => [
                         'full_name'    => $address->full_name,
                         'phone'        => $address->phone,
@@ -171,13 +191,20 @@ class OrderController extends Controller
                 'success' => true,
                 'message' => 'Order placed successfully',
                 'code'    => 1000,
-                'data'    => new OrderResource($order),
+                'data'    => [
+                    'id'             => $order->id,
+                    'order_number'   => $order->order_number,
+                    'payment_method' => $order->payment_method,
+                    'payment_status' => $order->payment_status,
+                    'total_amount'   => (float) $order->total_amount,
+                    'order_details'  => new OrderResource($order),
+                ],
             ], 201);
 
         } catch (\Throwable $th) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to place order. ' . $th->getMessage(),
+                'message' => 'Failed to place order: ' . $th->getMessage(),
                 'code'    => 500,
             ], 500);
         }
@@ -206,24 +233,24 @@ class OrderController extends Controller
             ], 404);
         }
 
-        // Default status fallback if new status values are not set
+        // Default status fallback if status is not standard
         $currentStatus = in_array($order->status, ['placed', 'packing', 'out_for_delivery', 'delivered', 'cancelled'])
             ? $order->status
             : 'out_for_delivery';
 
-        // Estimated delivery calculation (Default: 10 mins from order creation if not set)
+        // Estimated delivery calculation (Default: 10 mins from order creation)
         $estimatedTime = $order->estimated_delivery_time ?? $order->created_at->addMinutes(10);
         $diffInMins = (int) ceil(Carbon::now()->diffInMinutes($estimatedTime, false));
         $estimatedMins = max($diffInMins, 0);
 
-        // Mock Delivery Partner details if DB fields are empty
+        // Delivery Partner details
         $deliveryPartner = [
             'name'   => $order->delivery_partner_name ?? 'Rahul Sharma',
             'phone'  => $order->delivery_partner_phone ?? '+91 98765 43210',
             'avatar' => 'https://i.pravatar.cc/150?img=12',
         ];
 
-        // Status Timeline with completion status for UI stepper
+        // Status Timeline
         $timeline = [
             [
                 'stage'       => 'placed',
