@@ -80,11 +80,19 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     // Customer Users List
     Route::get('/users', [AdminUserController::class, 'index']);
 
-    // Product CRUD
-    Route::apiResource('products', AdminProductController::class);
+    // Category CRUD & Multipart Update
+    Route::get('/categories', [AdminCategoryController::class, 'index']);
+    Route::post('/categories', [AdminCategoryController::class, 'store']);
+    Route::post('/categories/{id}', [AdminCategoryController::class, 'update']); // Direct POST for multipart
+    Route::put('/categories/{id}', [AdminCategoryController::class, 'update']);
+    Route::delete('/categories/{id}', [AdminCategoryController::class, 'destroy']);
 
-    // Category CRUD
-    Route::apiResource('categories', AdminCategoryController::class);
+    // Product CRUD & Multipart Update
+    Route::get('/products', [AdminProductController::class, 'index']);
+    Route::post('/products', [AdminProductController::class, 'store']);
+    Route::post('/products/{id}', [AdminProductController::class, 'update']); // Direct POST for multipart
+    Route::put('/products/{id}', [AdminProductController::class, 'update']);
+    Route::delete('/products/{id}', [AdminProductController::class, 'destroy']);
 
 });
 

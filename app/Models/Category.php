@@ -33,6 +33,16 @@ class Category extends Model
     ];
 
     /**
+     * In accessors ko JSON / API response me automatically include karega
+     */
+    protected $appends = [
+        'image_url',
+        'banner_url',
+        'logo_url',
+        'logo_url_web',
+    ];
+
+    /**
      * Parent Category Relationship (Self-Referencing)
      */
     public function parent(): BelongsTo
@@ -58,9 +68,26 @@ class Category extends Model
 
     /* ================= Dynamic Image URL Accessors ================= */
 
+    /**
+     * Main Category Image Accessor (Handles both full URL and local storage path)
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        if (!$this->image) {
+            return null;
+        }
+
+        return filter_var($this->image, FILTER_VALIDATE_URL) 
+            ? $this->image 
+            : asset('storage/' . $this->image);
+    }
+
     public function getBannerUrlAttribute(): ?string
     {
-        if (!$this->banner_image) return null;
+        if (!$this->banner_image) {
+            return null;
+        }
+
         return filter_var($this->banner_image, FILTER_VALIDATE_URL) 
             ? $this->banner_image 
             : asset('storage/' . $this->banner_image);
@@ -68,7 +95,10 @@ class Category extends Model
 
     public function getLogoUrlAttribute(): ?string
     {
-        if (!$this->logo_image) return null;
+        if (!$this->logo_image) {
+            return null;
+        }
+
         return filter_var($this->logo_image, FILTER_VALIDATE_URL) 
             ? $this->logo_image 
             : asset('storage/' . $this->logo_image);
@@ -76,7 +106,10 @@ class Category extends Model
 
     public function getLogoUrlWebAttribute(): ?string
     {
-        if (!$this->logo_image_web) return null;
+        if (!$this->logo_image_web) {
+            return null;
+        }
+
         return filter_var($this->logo_image_web, FILTER_VALIDATE_URL) 
             ? $this->logo_image_web 
             : asset('storage/' . $this->logo_image_web);
